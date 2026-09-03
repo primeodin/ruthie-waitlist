@@ -9,6 +9,8 @@
   var thanks = document.getElementById("thanks");
   var cfg = window.RUTHIE_WAITLIST || {};
 
+  window.ruthieEvents = window.ruthieEvents || [];
+
   function resolveSource() {
     var q = new URLSearchParams(window.location.search);
     var utmSource = (q.get("utm_source") || "").trim();
@@ -29,6 +31,17 @@
       }
     } catch (e) {}
     return "direct";
+  }
+
+  function track(name, props) {
+    var row = {
+      event: name,
+      ts: new Date().toISOString(),
+      path: window.location.pathname || "/",
+      source: (props && props.source) || resolveSource()
+    };
+    if (props && props.reason) row.reason = props.reason;
+    window.ruthieEvents.push(row);
   }
 
   function isEmail(value) {
@@ -56,6 +69,7 @@
       email: payload.email,
       createdAt: payload.createdAt,
       source: payload.source,
+      event: "waitlist_submit_success",
       botcheck: false
     };
     var res = await fetch("https://api.web3forms.com/submit", {
@@ -72,9 +86,14 @@
     }
   }
 
+  track("page_view", { source: resolveSource() });
+
   form.addEventListener("submit", function (event) {
     event.preventDefault();
     showError("");
+
+    var source = resolveSource();
+    track("waitlist_submit_attempt", { source: source });
 
     if ((honey.value || "").trim()) {
       showThanks();
@@ -83,6 +102,7 @@
 
     var email = (emailInput.value || "").trim().toLowerCase();
     if (!isEmail(email)) {
+      track("waitlist_submit_error", { source: source, reason: "validation" });
       showError("Need a valid email.");
       emailInput.focus();
       return;
@@ -91,14 +111,19 @@
     var payload = {
       email: email,
       createdAt: new Date().toISOString(),
-      source: resolveSource()
+      source: source
     };
 
     button.disabled = true;
     persist(payload)
-      .then(showThanks)
+      .then(function () {
+        track("waitlist_submit_success", { source: source });
+        showThanks();
+      })
       .catch(function (err) {
         button.disabled = false;
+        var reason = err && err.message === "no-backend" ? "server" : "server";
+        track("waitlist_submit_error", { source: source, reason: reason });
         if (err && err.message === "no-backend") {
           showError("The list isn’t connected yet. Try again in a little while.");
         } else {
