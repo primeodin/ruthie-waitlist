@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://primeodin.github.io/ruthie-waitlist/sitemap.xml
