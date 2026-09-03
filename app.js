@@ -45,18 +45,20 @@
   }
 
   async function persist(payload) {
-    var hash = (cfg.formsubmitHash || "").trim();
-    if (!hash) {
+    var key = (cfg.web3formsKey || "").trim();
+    if (!key) {
       throw new Error("no-backend");
     }
     var body = {
+      access_key: key,
+      subject: "[RUTHIE waitlist]",
+      from_name: "Ruthie waitlist",
       email: payload.email,
       createdAt: payload.createdAt,
       source: payload.source,
-      _subject: "Ruthie waitlist",
-      _template: "table"
+      botcheck: false
     };
-    var res = await fetch("https://formsubmit.co/ajax/" + hash, {
+    var res = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(body)
@@ -65,7 +67,7 @@
     try {
       data = await res.json();
     } catch (e) {}
-    if (!res.ok || data.success === false || data.success === "false") {
+    if (!res.ok || data.success === false) {
       throw new Error("server");
     }
   }

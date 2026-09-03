@@ -1,10 +1,9 @@
 /* Public client config for the waitlist form.
  *
- * Do not put GitHub tokens, PATs, or server secrets here.
- * Capture is disconnected until Ruthie/Channa name a durable inbox.
- * FormSubmit hash and Web3Forms keys stay empty on purpose.
+ * Do not put GitHub tokens, PATs, or the destination email here.
+ * Web3Forms access key is designed to be public in HTML — it routes
+ * submissions to a verified inbox configured in the Web3Forms dashboard.
  */
 window.RUTHIE_WAITLIST = {
-  formsubmitHash: "",
-  web3formsKey: ""
+  web3formsKey: "5ff48a90-cb21-4442-a646-5f9f61a12052"
 };
