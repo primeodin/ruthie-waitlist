@@ -42,31 +42,6 @@
     };
     if (props && props.reason) row.reason = props.reason;
     window.ruthieEvents.push(row);
-
-    // Durable friction events only (not page_view — that would flood the inbox).
-    // Signup count = Web3Forms rows with subject [RUTHIE waitlist].
-    if (name === "waitlist_submit_attempt" || name === "waitlist_submit_error") {
-      var key = (cfg.web3formsKey || "").trim();
-      if (!key) return;
-      var body = {
-        access_key: key,
-        subject: "[RUTHIE waitlist event]",
-        from_name: "Ruthie waitlist events",
-        email: "events@ruthie.waitlist",
-        event: row.event,
-        createdAt: row.ts,
-        source: row.source,
-        path: row.path,
-        botcheck: false
-      };
-      if (row.reason) body.reason = row.reason;
-      fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(body),
-        keepalive: true
-      }).catch(function () {});
-    }
   }
 
   function isEmail(value) {
@@ -147,7 +122,8 @@
       })
       .catch(function (err) {
         button.disabled = false;
-        track("waitlist_submit_error", { source: source, reason: "server" });
+        var reason = err && err.message === "no-backend" ? "server" : "server";
+        track("waitlist_submit_error", { source: source, reason: reason });
         if (err && err.message === "no-backend") {
           showError("The list isn’t connected yet. Try again in a little while.");
         } else {
